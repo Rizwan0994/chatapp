@@ -8,9 +8,6 @@
 # testing
 /coverage
 
-#.rar files
-*.rar
-
 # production
 #/build
 

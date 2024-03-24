@@ -205,7 +205,11 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
 
   return (
     <>
-      <IconButton display={{ base: "flex" }} icon={<ViewIcon />} onClick={onOpen} />
+      <IconButton
+        display={{ base: "flex" }}
+        icon={<ViewIcon />}
+        onClick={onOpen}
+      />
 
       <Modal onClose={onClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
@@ -225,9 +229,10 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
               {selectedChat.users.map((u) => (
                 <UserBadgeItem
                   key={u._id}
-                  user={u}
+                  guser={u}
                   admin={selectedChat.groupAdmin}
-                  handleFunction={() => handleRemove(u)}
+                  isAdmin={selectedChat.groupAdmin._id === u._id}
+                  handleRemove={() => handleRemove(u)}
                 />
               ))}
             </Box>

@@ -20,6 +20,17 @@ const userSchema = mongoose.Schema({
         required:true,
         default:"https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
+    rollnum:{
+        type:String,
+    },
+    batch:{
+        type:String,
+        default:null
+    },
+    subscribe:{
+        type:Boolean,
+        default:false
+    },
     usertype: {
         type: String,
         enum: ['user','student', 'admin','member'],

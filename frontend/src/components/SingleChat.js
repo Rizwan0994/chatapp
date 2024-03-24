@@ -356,12 +356,13 @@ import { Input } from "@chakra-ui/input";
 import { Box, Text } from "@chakra-ui/layout";
 import { Flex } from "@chakra-ui/layout";
 import { Alert, AlertIcon } from "@chakra-ui/react";
-import { IconButton, Spinner, useToast } from "@chakra-ui/react";
 import "./styles.css";
+import { IconButton, Spinner, useToast } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { ArrowBackIcon, PhoneIcon, CheckIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon, PhoneIcon,CheckIcon } from "@chakra-ui/icons";
+import { BsCameraVideo } from "react-icons/bs";
 import ProfileModal from "./miscellaneous/ProfileModal";
 import { ChatState } from "../Context/ChatProvider";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
@@ -371,9 +372,8 @@ import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import { Progress } from "@chakra-ui/react";
 import { ChatIcon } from '@chakra-ui/icons';
-
-const ENDPOINT = "http://localhost:5000/";
-let socket, selectedChatCompare, peerConnection;
+const ENDPOINT = "https://chatapp-anja.onrender.com/";
+let socket, selectedChatCompare,peerConnection;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
@@ -389,7 +389,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [istyping, setIsTyping] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const toast = useToast();
-  const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
+
+ const { selectedChat, setSelectedChat, user, notification, setNotification } =
+    ChatState();
+
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -398,10 +401,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-
-  const localVideoRef = useRef();
-  const remoteVideoRef = useRef();
-
+  const localVideoRef = useRef({});
+const remoteVideoRef = useRef({});
+  //for socket get initallize first we put this use effect at the top
+  const answerCall = async () => {
+    try {
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      socket.emit("answer", {
+        answer,
+        chatId: selectedChat._id,
+      });
+    } catch (error) {
+      console.error("Error answering call:", error);
+    }
+  };
   useEffect(() => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
@@ -414,6 +428,20 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     });
   }, []);
 
+  const initiateCall = async () => {
+    try {
+     
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      socket.emit("call", {
+        offer,
+        chatId: selectedChat._id,
+      });
+    } catch (error) {
+      console.error("Error initiating call:", error);
+    }
+  };
+  
   useEffect(() => {
     if (selectedChat && isInCall) {
       initiateCall();
@@ -432,7 +460,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
       setLoading(true);
 
-      const { data } = await axios.get(`/api/message/${selectedChat._id}`, config);
+      const { data } = await axios.get(
+        `/api/message/${selectedChat._id}`,
+        config
+      );
       setMessages(data);
       setLoading(false);
       socket.emit("join chat", selectedChat._id);
@@ -469,31 +500,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }, timerLength);
   };
 
-  const initiateCall = async () => {
-    try {
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-      socket.emit("call", {
-        offer,
-        chatId: selectedChat._id,
-      });
-    } catch (error) {
-      console.error("Error initiating call:", error);
-    }
-  };
+  
 
-  const answerCall = async () => {
-    try {
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      socket.emit("answer", {
-        answer,
-        chatId: selectedChat._id,
-      });
-    } catch (error) {
-      console.error("Error answering call:", error);
-    }
-  };
+ 
 
   const handleIncomingCall = async (offer) => {
     try {
@@ -508,14 +517,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       console.error("Error handling incoming call:", error);
     }
   };
-
+ 
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
 
     const config = {
       headers: {
-        'Content type': 'multipart/form-data',
+        'Content-type': 'multipart/form-data',
         Authorization: `Bearer ${user.token}`,
       },
       onUploadProgress: (progressEvent) => {
@@ -528,7 +537,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const { data } = await axios.post("/api/message/attachment", formData, config);
     return data.fileUrl;
   };
-
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     const maxSize = 10485760; // 10 MB
@@ -543,12 +551,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setSelectedFile(file);
       const fileUrl = await uploadFile(file);
       setFileUrl(fileUrl);
+      //alert('File attached successfully! Press Enter to send the message.');
     }
     setIsUploading(false);
   };
-
   const sendMessage = async (event) => {
     if (event.key === "Enter" && (newMessage || fileUrl)) {
+
+
       try {
         const config = {
           headers: {
@@ -569,6 +579,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         );
         socket.emit("new message", data);
         setMessages([...messages, data]);
+
       } catch (error) {
         toast({
           title: "Error Occured!",
@@ -585,58 +596,98 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     fetchMessages();
     selectedChatCompare = selectedChat;
+  }, [selectedChat]);
 
+  useEffect(() => {
+    socket.on("message recieved", (newMessageRecieved) => {
+      if (
+        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        if (!notification.includes(newMessageRecieved)) {
+          setNotification([newMessageRecieved, ...notification]);
+          setFetchAgain(!fetchAgain);
+        }
+      } else {
+        setMessages([...messages, newMessageRecieved]);
+      }
+    });
+  });
+
+    const handleTrack = (event) => {
+    console.log("Track received:",event);
+    remoteVideoRef.current.srcObject = event.streams[0];
+  };
+  useEffect(() => {
     // Initialize peer connection
     peerConnection = new RTCPeerConnection();
-
+  
     // Add event listeners for ICE candidates and stream handling
     peerConnection.onicecandidate = handleICECandidate;
     peerConnection.ontrack = handleTrack;
-
-    // Add local stream to peer connection
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-        localVideoRef.current.srcObject = stream;
-      })
-      .catch(error => console.error("Error accessing media devices:", error));
-
+  
     // Listen for incoming call
     socket.on("incoming call", (offer) => {
       setIsCalling(true);
       handleIncomingCall(offer);
     });
-
+  
     // Cleanup function
     return () => {
       peerConnection.close();
       socket.off("incoming call");
     };
-  }, [selectedChat]);
+  }, []);
+  
 
   const handleICECandidate = (event) => {
     if (event.candidate) {
+      //console.log('--------->', selectedChat)
       socket.emit("candidate", {
         candidate: event.candidate,
-        chatId: selectedChat._id,
+        chatId: '65f86f0326076e0d4504d1ba',
       });
     }
   };
 
-  const handleTrack = (event) => {
-    remoteVideoRef.current.srcObject = event.streams[0];
-  };
 
-  const startCall = () => {
-    setIsInCall(true);
-  };
 
+  const startCall = async () => {
+    try {
+      // Ask for media device permission before initiating the call
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      console.log("Media stream obtained:", stream);
+      if (peerConnection.signalingState !== "closed") {
+        // Add tracks to the peer connection
+        stream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, stream);
+          console.log("Track added:", track);
+        });}
+      localVideoRef.current.srcObject = stream;
+      setIsInCall(true);
+    } catch (error) {
+      console.error("Error accessing media devices:", error);
+      // Handle permission error gracefully, such as showing an error message to the user
+      toast({
+        title: "Error",
+        description: "Failed to access media devices. Please allow access and try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+  
   const endCall = () => {
     setIsInCall(false);
   };
+  
 
   return (
     <>
+           {isCalling && <video   ref={localVideoRef} autoPlay muted  />}
+          {isInCall && <video ref={remoteVideoRef} autoPlay  />}
       {selectedChat ? (
         <>
           <Text
@@ -658,26 +709,30 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             {!selectedChat.isGroupChat ? (
               <>
                 {getSender(user, selectedChat.users)}
-                <div style={{ display: 'flex', columnGap: '3rem', marginRight: '1rem', alignItems: 'center' }}>
+                <div style={{display:'flex', columnGap:'3rem',marginRight:'1rem',alignItems:'center'}}>
                   <ProfileModal user={getSenderFull(user, selectedChat.users)} />
+                {/* <PhoneIcon />
+                <BsCameraVideo /> */}
                   {!isInCall && <IconButton icon={<PhoneIcon />} onClick={startCall} />}
                   {isInCall && <IconButton icon={<CheckIcon />} onClick={endCall} />}
-                </div>
 
+                </div>
+                
               </>
             ) : (
               <>
                 {'# '}{selectedChat.chatName}
-                <div style={{ display: 'flex', columnGap: '3rem', marginRight: '1rem', alignItems: 'center' }}>
-                  <UpdateGroupChatModal
-                    fetchMessages={fetchMessages}
-                    fetchAgain={fetchAgain}
-                    setFetchAgain={setFetchAgain}
-                  />
-                  {!isInCall && <IconButton icon={<PhoneIcon />} onClick={startCall} />}
+                <div style={{display:'flex', columnGap:'3rem',marginRight:'1rem',alignItems:'center'}}>
+                <UpdateGroupChatModal
+                  fetchMessages={fetchMessages}
+                  fetchAgain={fetchAgain}
+                  setFetchAgain={setFetchAgain}
+                />
+               {!isInCall && <IconButton icon={<PhoneIcon />} onClick={startCall} />}
                   {isInCall && <IconButton icon={<CheckIcon />} onClick={endCall} />}
-                </div>
 
+                </div>
+               
               </>
             )}
           </Text>
@@ -765,8 +820,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               }
             </FormControl>
           </Box>
-          {isCalling && <video   ref={localVideoRef} autoPlay muted style={{ display: "none" }} />}
-          {isInCall && <video ref={remoteVideoRef} autoPlay style={{ width: "100%" }} />}
+   
+
         </>
       ) : (
         <Box display="flex" alignItems="center" justifyContent="center" h="100%" gap={2}>
@@ -781,4 +836,3 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 };
 
 export default SingleChat;
-

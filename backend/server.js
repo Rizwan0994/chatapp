@@ -102,10 +102,8 @@ dotenv.config();
 const express = require("express");
 const connectDB = require("./config/db");
 const http = require("http");
-const path = require("path");
-
 const socketIo = require("socket.io");
-
+const path = require("path"); // Add this import
 const usersInCall = {};
 
 // Connect to MongoDB
@@ -134,14 +132,12 @@ app.use("/api/message", require("./routes/messageRoutes"));
 //     res.send("API is running..");
 //   });
 // }
-
 app.get("/", (req, res) => {
   res.send("API is running..");
 });
-// Error handling middleware
- const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-// // const { Socket } = require("socket.io");
 
+// Error handling middleware
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 app.use(notFound);
 app.use(errorHandler);
 

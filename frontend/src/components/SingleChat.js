@@ -618,28 +618,6 @@ const remoteVideoRef = useRef({});
     console.log("Track received:",event);
     remoteVideoRef.current.srcObject = event.streams[0];
   };
-  useEffect(() => {
-    // Initialize peer connection
-    peerConnection = new RTCPeerConnection();
-  
-    // Add event listeners for ICE candidates and stream handling
-    peerConnection.onicecandidate = handleICECandidate;
-    peerConnection.ontrack = handleTrack;
-  
-    // Listen for incoming call
-    socket.on("incoming call", (offer) => {
-      setIsCalling(true);
-      handleIncomingCall(offer);
-    });
-  
-    // Cleanup function
-    return () => {
-      peerConnection.close();
-      socket.off("incoming call");
-    };
-  }, []);
-  
-
   const handleICECandidate = (event) => {
     if (event.candidate) {
       //console.log('--------->', selectedChat)
@@ -678,6 +656,29 @@ const remoteVideoRef = useRef({});
       });
     }
   };
+  useEffect(() => {
+    // Initialize peer connection
+    peerConnection = new RTCPeerConnection();
+  
+    // Add event listeners for ICE candidates and stream handling
+    peerConnection.onicecandidate = handleICECandidate;
+    peerConnection.ontrack = handleTrack;
+  
+    // Listen for incoming call
+    socket.on("incoming call", (offer) => {
+      setIsCalling(true);
+      handleIncomingCall(offer);
+    });
+  
+    // Cleanup function
+    return () => {
+      peerConnection.close();
+      socket.off("incoming call");
+    };
+  }, []);
+  
+
+ 
   
   const endCall = () => {
     setIsInCall(false);

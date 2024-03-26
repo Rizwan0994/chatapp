@@ -47,7 +47,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         },
       };
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log(data);
+//console.log(data);
       setLoading(false);
       setSearchResult(data);
     } catch (error) {
@@ -82,7 +82,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         config
       );
 
-      console.log(data._id);
+    //  console.log(data._id);
       // setSelectedChat("");
       setSelectedChat(data);
       setFetchAgain(!fetchAgain);
@@ -226,12 +226,13 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
           <ModalCloseButton />
           <ModalBody display="flex" flexDir="column" alignItems="center">
             <Box w="100%" display="flex" flexWrap="wrap" pb={3}>
-              {selectedChat.users.map((u) => (
+              {selectedChat.users?.map((u) => (
                 <UserBadgeItem
                   key={u._id}
                   guser={u}
                   admin={selectedChat.groupAdmin}
                   isAdmin={selectedChat.groupAdmin._id === u._id}
+                  groupAdminId={selectedChat.groupAdmin._id}
                   handleRemove={() => handleRemove(u)}
                 />
               ))}

@@ -6,7 +6,9 @@ import axios from "axios";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/toast";
 
-const UserCardItem = ({ guser,isAdmin , handleRemove}) => {
+const UserCardItem = ({ guser,isAdmin ,groupAdminId, handleRemove}) => {
+  const loginuser = JSON.parse(localStorage.getItem("userInfo"));
+
   const {
     setSelectedChat,
     notification,
@@ -19,8 +21,9 @@ const UserCardItem = ({ guser,isAdmin , handleRemove}) => {
   const [loadingChat, setLoadingChat] = useState(false);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+ // console.log(guser);
   const accessChat = async (userId) => {
-    console.log(userId);
+    
 
     try {
       setLoadingChat(true);
@@ -79,13 +82,15 @@ const UserCardItem = ({ guser,isAdmin , handleRemove}) => {
         aria-label="Start Chat"
         mr={2}
       />
-      <IconButton
-        icon={<CloseIcon />}
-        onClick={() => handleRemove(guser)}
-        variant="ghost"
-        colorScheme="red"
-        aria-label="Remove User"
-      />
+{loginuser._id === groupAdminId && (
+    <IconButton
+      icon={<CloseIcon />}
+      onClick={() => handleRemove(guser)}
+      variant="ghost"
+      colorScheme="red"
+      aria-label="Remove User"
+    />
+  )}
     </Flex>
   );
 };

@@ -105,7 +105,7 @@ const MyChats = ({ fetchAgain }) => {
 
         {chats ? (
           <Stack overflowY="scroll">
-            {chats.filter(chat => chat.isGroupChat).map((chat) => (
+            {chats.filter(chat => chat.isGroupChat)?.map((chat) => (
               <Box
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"
@@ -133,7 +133,7 @@ const MyChats = ({ fetchAgain }) => {
             <Text color={'#efefef'} fontSize={{ base: "17px", md: "10px", lg: "17px" }}>
                Direct Messages
               </Text>
-            {chats.filter(chat => !chat.isGroupChat).map((chat) => (
+            {chats.filter(chat => !chat.isGroupChat)?.map((chat) => (
               <Box
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"

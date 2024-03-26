@@ -250,7 +250,7 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 // const { Socket } = require("socket.io");
 
 
-console.log(process.env.MONGO_URI);
+//console.log(process.env.MONGO_URI);
 connectDB();
 
 const app = express();
@@ -303,7 +303,7 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
   socket.on("call", ({ callerId, recipientId }) => {
-    console.log("caller id:",callerId)
+   // console.log("caller id:",callerId)
     // Emit incoming call event to the recipient along with the callerId
     io.to(recipientId).emit("incomingCall", callerId);
   });

@@ -95,7 +95,7 @@ const GroupChatModal = ({ children }) => {
         `/api/chat/group`,
         {
           name: groupChatName,
-          users: JSON.stringify(selectedUsers.map((u) => u._id)),
+          users: JSON.stringify(selectedUsers?.map((u) => u._id)),
         },
         config
       );
@@ -159,7 +159,7 @@ const GroupChatModal = ({ children }) => {
               {selectedUsers.map((u) => (
                 <UserBadgeItem
                   key={u._id}
-                  user={u}
+                  guser={u}
                   handleFunction={() => handleDelete(u)}
                 />
               ))}

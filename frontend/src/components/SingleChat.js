@@ -887,7 +887,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("stop typing", () => setIsTyping(false));
     socket.on("incomingCall", (callerId) => {
       // Pass the callerId to the handleIncomingCall function
-      console.log("caller id socekt:", callerId);
+   //   console.log("caller id socekt:", callerId);
       handleIncomingCall(callerId);
     });
   }, []);
@@ -930,7 +930,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     if (callerId !== user._id) {
       // Only display incoming call screen if the call is for a different user
-      console.log("incomming call-->:", callerId);
+   //   console.log("incomming call-->:", callerId);
       setShowIncomingCall(true);
     }
     if (callerId !== user._id) {
